@@ -80,6 +80,7 @@
 <div class="input-box">
     <input id="input" placeholder="type command..." onkeydown="if(event.key==='Enter') send()" />
     <button onclick="send()">ENTER</button>
+    <button onclick="startListening()">🎤</button>
 </div>
 
 <script>
@@ -100,7 +101,6 @@ async function send() {
     let input = document.getElementById("input").value;
     let terminal = document.getElementById("terminal");
 
-    // Show user command
     terminal.innerHTML += `<div class="line user">> ${input}</div>`;
 
     let res = await fetch(`/chat/?user_input=${input}`, {
@@ -109,11 +109,42 @@ async function send() {
 
     let data = await res.json();
 
-    // AI typing effect
     await typeEffect(data.response, terminal);
+
+    // 🔊 Speak response
+    speak(data.response);
 
     terminal.scrollTop = terminal.scrollHeight;
     document.getElementById("input").value = "";
+}
+
+
+// 🎤 Voice Input
+function startListening() {
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+
+    recognition.lang = "en-US";
+
+    recognition.onresult = (event) => {
+        let text = event.results[0][0].transcript;
+        document.getElementById("input").value = text;
+        send();
+    };
+
+    recognition.onerror = (err) => {
+        console.error(err);
+    };
+
+    recognition.start();
+}
+
+
+// 🔊 Voice Output
+function speak(text) {
+    const speech = new SpeechSynthesisUtterance(text);
+    speech.lang = "en-US";
+    speech.rate = 1;
+    window.speechSynthesis.speak(speech);
 }
 </script>
 
