@@ -61,14 +61,37 @@ def ask_ai(prompt, name="AI"):
 
 def get_intent(user_input):
     prompt = f"""
-    Extract intent from user message.
+    You are an intent classifier.
 
-    Return ONLY JSON.
+    Identify intent from user message.
 
-    Examples:
-    {{"intent": "add_task", "task": "fix bug"}}
+    Only return JSON. No explanation.
+
+    Possible intents:
+
+    1. add_task → user wants to add a task
+    Example: "add task study"
+
+    2. show_tasks → user wants to see tasks
+    Example: "show tasks"
+
+    3. set_name → user is assigning a name to AI
+    Example: "your name is nova"
+
+    4. get_name → user is asking AI name
+    Example: "what is your name"
+
+    Rules:
+    - DO NOT confuse set_name and get_name
+    - If asking → get_name
+    - If assigning → set_name
+
+    Output format:
+
+    {{"intent": "add_task", "task": "text"}}
     {{"intent": "show_tasks"}}
-    {{"intent": "set_name", "name": "jarvis"}}
+    {{"intent": "set_name", "name": "nova"}}
+    {{"intent": "get_name"}}
 
     Message: {user_input}
     """
@@ -85,7 +108,6 @@ def get_intent(user_input):
         return json.loads(text)
     except:
         return {"intent": "chat"}
-
 
 # ---------------- TASK STORAGE ----------------
 tasks = []
@@ -123,7 +145,7 @@ def chat(user_input: str):
         return {"response": "\n".join([f"{i+1}. {t}" for i, t in enumerate(tasks)])}
 
     # ✅ GET NAME
-    elif "your name" in user_input.lower():
+    elif intent == "get_name":
         name = get_setting(db, "assistant_name") or "AI"
         return {"response": f"My name is {name}"}
 
