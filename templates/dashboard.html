@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Terminal</title>
+
+    <style>
+        body {
+            background: black;
+            color: #00ff00;
+            font-family: monospace;
+            margin: 0;
+        }
+
+        header {
+            padding: 10px;
+            border-bottom: 1px solid #00ff00;
+            text-align: center;
+        }
+
+        .terminal {
+            padding: 15px;
+            height: 80vh;
+            overflow-y: auto;
+        }
+
+        .line {
+            margin: 5px 0;
+        }
+
+        .user {
+            color: #00ffff;
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 10px;
+            background: #00ff00;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+
+        .input-box {
+            display: flex;
+            border-top: 1px solid #00ff00;
+        }
+
+        input {
+            flex: 1;
+            background: black;
+            color: #00ff00;
+            border: none;
+            padding: 10px;
+            font-family: monospace;
+            outline: none;
+        }
+
+        button {
+            background: black;
+            color: #00ff00;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #003300;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>AI TERMINAL v1.0</header>
+
+<div class="terminal" id="terminal"></div>
+
+<div class="input-box">
+    <input id="input" placeholder="type command..." onkeydown="if(event.key==='Enter') send()" />
+    <button onclick="send()">ENTER</button>
+</div>
+
+<script>
+async function typeEffect(text, container) {
+    let i = 0;
+    let line = document.createElement("div");
+    line.className = "line";
+    container.appendChild(line);
+
+    let interval = setInterval(() => {
+        line.innerHTML += text[i];
+        i++;
+        if (i >= text.length) clearInterval(interval);
+    }, 20);
+}
+
+async function send() {
+    let input = document.getElementById("input").value;
+    let terminal = document.getElementById("terminal");
+
+    // Show user command
+    terminal.innerHTML += `<div class="line user">> ${input}</div>`;
+
+    let res = await fetch(`/chat/?user_input=${input}`, {
+        method: "POST"
+    });
+
+    let data = await res.json();
+
+    // AI typing effect
+    await typeEffect(data.response, terminal);
+
+    terminal.scrollTop = terminal.scrollHeight;
+    document.getElementById("input").value = "";
+}
+</script>
+
+</body>
+</html>
