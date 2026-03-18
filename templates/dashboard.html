@@ -31,17 +31,6 @@
             color: #00ffff;
         }
 
-        .cursor {
-            display: inline-block;
-            width: 10px;
-            background: #00ff00;
-            animation: blink 1s infinite;
-        }
-
-        @keyframes blink {
-            50% { opacity: 0; }
-        }
-
         .input-box {
             display: flex;
             border-top: 1px solid #00ff00;
@@ -84,6 +73,25 @@
 </div>
 
 <script>
+let selectedVoice = null;
+
+// ✅ Load voices properly
+window.speechSynthesis.onvoiceschanged = () => {
+    const voices = speechSynthesis.getVoices();
+
+    console.log("Available voices:", voices.map(v => v.name));
+
+    // 🔥 Try to pick best voice automatically
+    selectedVoice =
+        voices.find(v => v.name.includes("Google UK English")) ||
+        voices.find(v => v.name.includes("Google US English")) ||
+        voices.find(v => v.name.includes("Microsoft")) ||
+        voices.find(v => v.name.includes("Google हिन्दी")) ||
+        voices[0];
+};
+
+
+// ✨ Typing effect
 async function typeEffect(text, container) {
     let i = 0;
     let line = document.createElement("div");
@@ -97,9 +105,13 @@ async function typeEffect(text, container) {
     }, 20);
 }
 
+
+// 🚀 Send message
 async function send() {
     let input = document.getElementById("input").value;
     let terminal = document.getElementById("terminal");
+
+    if (!input.trim()) return;
 
     terminal.innerHTML += `<div class="line user">> ${input}</div>`;
 
@@ -111,8 +123,7 @@ async function send() {
 
     await typeEffect(data.response, terminal);
 
-    // 🔊 Speak response
-    speak(data.response);
+    speak(data.response); // 🔊 voice
 
     terminal.scrollTop = terminal.scrollHeight;
     document.getElementById("input").value = "";
@@ -139,12 +150,16 @@ function startListening() {
 }
 
 
-// 🔊 Voice Output
+// 🔊 Voice Output (UPGRADED)
 function speak(text) {
     const speech = new SpeechSynthesisUtterance(text);
-    speech.lang = "en-US";
-    speech.rate = 1;
-    window.speechSynthesis.speak(speech);
+
+    speech.voice = selectedVoice;
+    speech.rate = 0.9;   // 🧠 natural speed
+    speech.pitch = 0.8;  // 🤖 deeper tone
+    speech.lang = "en-GB";
+
+    speechSynthesis.speak(speech);
 }
 </script>
 
