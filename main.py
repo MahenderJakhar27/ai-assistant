@@ -63,35 +63,28 @@ def get_intent(user_input):
     prompt = f"""
     You are an intent classifier.
 
-    Identify intent from user message.
-
-    Only return JSON. No explanation.
+    ONLY classify intent. Do NOT guess.
 
     Possible intents:
-
-    1. add_task → user wants to add a task
-    Example: "add task study"
-
-    2. show_tasks → user wants to see tasks
-    Example: "show tasks"
-
-    3. set_name → user is assigning a name to AI
-    Example: "your name is nova"
-
-    4. get_name → user is asking AI name
-    Example: "what is your name"
+    - add_task
+    - show_tasks
+    - set_name
+    - get_name
+    - chat
 
     Rules:
-    - DO NOT confuse set_name and get_name
-    - If asking → get_name
-    - If assigning → set_name
+    - If user assigns name → set_name
+    - If user asks name → get_name
+    - If unrelated → chat
 
-    Output format:
+    VERY IMPORTANT:
+    - "what is python" → chat
+    - "hey" → chat
+    - "hello" → chat
 
-    {{"intent": "add_task", "task": "text"}}
-    {{"intent": "show_tasks"}}
-    {{"intent": "set_name", "name": "nova"}}
-    {{"intent": "get_name"}}
+    Return ONLY JSON:
+
+    {{"intent": "chat"}}
 
     Message: {user_input}
     """
@@ -108,7 +101,6 @@ def get_intent(user_input):
         return json.loads(text)
     except:
         return {"intent": "chat"}
-
 # ---------------- TASK STORAGE ----------------
 tasks = []
 
@@ -126,8 +118,13 @@ def chat(user_input: str):
     intent_data = get_intent(user_input)
     intent = intent_data.get("intent")
 
+# 🔥 SAFETY FILTER
+    allowed_intents = ["add_task", "show_tasks", "set_name", "get_name", "set_user_name", "get_user_name", "chat"]
+
+    if intent not in allowed_intents:
+        intent = "chat"
     # ✅ SET NAME
-    if intent == "set_name":
+    elif intent == "set_name":
         name = intent_data.get("name", "AI")
         set_setting(db, "assistant_name", name)
         return {"response": f"🤖 My name is now {name}"}
